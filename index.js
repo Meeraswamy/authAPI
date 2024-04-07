@@ -1,14 +1,12 @@
 // index.js
 
 const express = require('express');
-const session = require('express-session');
-const RedisStore = require('connect-redis').default;
-const client =  require('./services/redisService')
 const mongoose = require('mongoose');
 const expressWinston = require('express-winston');
 const logger  = require('./services/logger')
 const config = require('./config');
 const authRoutes = require('./routes/auth');
+const cors = require('cors')
 
 const app = express();
 
@@ -20,22 +18,15 @@ app.use(expressWinston.logger({
   expressFormat: true,
 }));    // This middleware logs all HTTP requests.
 
-app.use(
-  session({
-    store: new RedisStore({ client: client }),
-    secret: config.session.secret,
-    resave: config.session.resave,
-    saveUninitialized: config.session.saveUninitialized,
-    cookie: config.session.cookie,
-  })
-);   // express session middleware.
+app.use(cors(config.corsConfig));
+app.options('*',cors(config.corsConfig));
 
 app.use(express.json());
 
 app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => {
-  res.send(req.session.authUser ? `Hello, ${req.session.authUser.username}! <a href="/auth/logout">Logout</a>` : 'Home Page');
+  res.status(200).json({message:"This is home"});
 });
 
 app.use(expressWinston.errorLogger({
